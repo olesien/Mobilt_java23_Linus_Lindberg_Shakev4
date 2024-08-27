@@ -19,7 +19,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello Test!"
+        android:text="Epic Description"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.581"
@@ -33,7 +33,7 @@
         android:id="@+id/text1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Dynamo Text!"
+        android:text="Super good text!"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.581"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -41,6 +41,7 @@
         />
 
     <Button
+        android:background="#ff00ff"
         android:layout_marginTop="20dp"
         android:id="@+id/button3"
         android:layout_width="123dp"
