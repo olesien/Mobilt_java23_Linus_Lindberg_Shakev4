@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,7 @@ import java.util.Locale;
 public class GyroActivity extends AppCompatActivity implements SensorEventListener {
     private SensorManager sensorManager;
     private final float[] gyrometerReading = new float[3];
+    TextView gyroNumbers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +30,8 @@ public class GyroActivity extends AppCompatActivity implements SensorEventListen
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            gyroNumbers = findViewById(R.id.gyronumbers);
+
             return insets;
         });
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -52,7 +56,7 @@ public class GyroActivity extends AppCompatActivity implements SensorEventListen
         // In this example, the sensor reporting delay is small enough such that
         // the application receives an update before the system checks the sensor
         // readings again.
-        Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         if (accelerometer != null) {
             sensorManager.registerListener(this, accelerometer,
                     SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
@@ -77,7 +81,9 @@ public class GyroActivity extends AppCompatActivity implements SensorEventListen
 
             System.arraycopy(event.values, 0, gyrometerReading,
                     0, gyrometerReading.length);
-
+            if (gyroNumbers != null) {
+                gyroNumbers.setText(String.format(Locale.getDefault(), "X: %.3f Y: %.3f Z: %.3f ", gyrometerReading[0], gyrometerReading[1], gyrometerReading[2]));
+            }
         }
     }
 }
