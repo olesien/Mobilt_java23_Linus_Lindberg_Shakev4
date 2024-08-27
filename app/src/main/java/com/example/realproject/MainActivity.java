@@ -8,6 +8,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -28,8 +29,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView levelText;
     TextView experienceText;
     TextView progressText;
-
-    double xAxis,yAxis,zAxis;
+    ProgressBar progressBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,11 +38,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            ExtraUtil.setNavListeners(this, findViewById(R.id.acc), findViewById(R.id.gyro), findViewById(R.id.gravity));
             accNumbers = findViewById(R.id.accnumbers);
             levelText = findViewById(R.id.level);
             experienceText = findViewById(R.id.exp);
             progressText = findViewById(R.id.progress);
+            progressBar = findViewById(R.id.progressBar);
             return insets;
         });
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -112,6 +112,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 levelText.setText(String.format(Locale.getDefault(),"Level: %d", level));
                 double currentProgressInNewLevel =  exp - Math.pow(2, level - 1);
                 double expToNextLevel = Math.pow(2, level) - Math.pow(2, level -1);
+                progressBar.setProgress((int) currentProgressInNewLevel);
+                progressBar.setMax((int) expToNextLevel);
                 progressText.setText(String.format(Locale.getDefault(), "Progress (%.0f/%.0f)", currentProgressInNewLevel, expToNextLevel));
                 Log.i("REQLEVEL", "Required for next level: " + String.valueOf(exp));
                 experienceText.setText(String.format(Locale.getDefault(),"Experience: %.0f", exp));
