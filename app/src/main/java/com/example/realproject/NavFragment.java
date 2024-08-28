@@ -19,7 +19,6 @@ public class NavFragment extends Fragment {
         Context context = getContext();
         TextView acc = view.findViewById(R.id.acc);
         TextView gyro = view.findViewById(R.id.gyro);
-        TextView gravity = view.findViewById(R.id.gravity);
 
         acc.setOnClickListener(e -> {
             Log.i("LINUS", "clicked button 1");
@@ -28,12 +27,8 @@ public class NavFragment extends Fragment {
 
         gyro.setOnClickListener(e -> {
             Log.i("LINUS2", "clicked button 2");
-            this.startActivity(new Intent(context, GyroActivity.class));
+            this.startActivity(new Intent(context, RotationActivity.class));
 
-        });
-
-        gravity.setOnClickListener(e -> {
-            Log.i("LINUS3", "clicked button 3");
         });
 
     }
