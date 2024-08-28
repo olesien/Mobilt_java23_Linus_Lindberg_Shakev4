@@ -10,110 +10,83 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import java.util.Locale;
-
+//Compass
 public class RotationActivity extends AppCompatActivity implements SensorEventListener {
     private SensorManager sensorManager;
-    private Sensor accelerometer;
-    private Sensor gyroscope;
+    private Sensor rotationVectorSensor;
     private TextView rotationNumbers;
-    private ImageView phoneImage;
+    private ImageView compass;
     private static final String TAG = "RotationAngle";
 
-    // Variables to hold the gyroscope data
-    private float[] gyroRotation = new float[3];
-    private float[] accelRotation = new float[3];
-    private float[] currentRotation = new float[3]; // For tracking rotation over time
-    private float timestamp; // Used to integrate gyroscope data
+    private float[] rotationMatrix = new float[9];
+    private float[] orientationAngles = new float[3];
+    private float[] calibrationOffsets = new float[3];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_rotation);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            rotationNumbers = findViewById(R.id.rotation);
-            phoneImage = findViewById(R.id.imageView);
-            return insets;
-        });
 
-        // Initialize SensorManager and Sensors
+        rotationNumbers = findViewById(R.id.rotation);
+        compass = findViewById(R.id.compass);
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Register listeners for accelerometer and gyroscope
-        if (accelerometer != null) {
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
-        }
-        if (gyroscope != null) {
-            sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_UI);
+        if (rotationVectorSensor != null) {
+            sensorManager.registerListener(this, rotationVectorSensor, SensorManager.SENSOR_DELAY_UI);
         }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        // Unregister sensor listeners when the activity is paused
         sensorManager.unregisterListener(this);
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Implement accuracy changes if needed
+        // Not used in this example
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        // Process accelerometer data
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            accelRotation = event.values.clone();
-        }
+        if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+            // Get the rotation matrix from the rotation vector
+            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
 
-        // Process gyroscope data
-        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            if (timestamp != 0) {
-                // Calculate the time difference
-                float dt = (event.timestamp - timestamp) * 1.0f / 1000000000.0f;
+            // Get the orientation angles from the rotation matrix
+            SensorManager.getOrientation(rotationMatrix, orientationAngles);
 
-                // Integrate the gyroscope data to track rotation
-                currentRotation[0] += event.values[0] * dt;
-                currentRotation[1] += event.values[1] * dt;
-                currentRotation[2] += event.values[2] * dt;
+            // Apply calibration offsets and convert to degrees
+            float azimuth = (float) Math.toDegrees(orientationAngles[0] - calibrationOffsets[0]);
+            float pitch = (float) Math.toDegrees(orientationAngles[1] - calibrationOffsets[1]);
+            float roll = (float) Math.toDegrees(orientationAngles[2] - calibrationOffsets[2]);
 
-                // Convert from radians to degrees
-                gyroRotation[0] = (float) Math.toDegrees(currentRotation[0]);
-                gyroRotation[1] = (float) Math.toDegrees(currentRotation[1]);
-                gyroRotation[2] = (float) Math.toDegrees(currentRotation[2]);
+            // Normalize angles
+            azimuth = (azimuth + 360) % 360;
+            pitch = (pitch + 180) % 360 - 180;
+            roll = (roll + 180) % 360 - 180;
 
-                // Display the current rotation in degrees
-                float deviceRotation = gyroRotation[2]; // Adjust this based on axis of interest
-                Log.d(TAG, String.format("Device rotation in degrees: %.2f", deviceRotation));
+            // Log the values
+            Log.d(TAG, String.format(Locale.getDefault(), "Z-Rotation: %.2f, Pitch: %.2f, Roll: %.2f", azimuth, pitch, roll));
 
-                // Display the values in TextView
-                if (rotationNumbers != null) {
-                    rotationNumbers.setText(String.format(Locale.getDefault(),
-                            "Rotation: %.2f degrees", deviceRotation));
-                }
-
-                // Apply reverse rotation to the image
-                if (phoneImage != null) {
-                    phoneImage.setRotation(-deviceRotation); // Adjust to make the image appear upright
-                }
+            // Display the values in TextView
+            if (rotationNumbers != null) {
+                rotationNumbers.setText(String.format(Locale.getDefault(),
+                        "Z-Rotation: %.2f°\nPitch: %.2f°\nRoll: %.2f°", azimuth, pitch, roll));
             }
-            timestamp = event.timestamp;
+
+            // Apply rotation to the image
+            if (compass != null) {
+                compass.setRotation(-azimuth);
+            }
         }
     }
 }
