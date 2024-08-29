@@ -10,6 +10,7 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Locale;
@@ -21,6 +22,7 @@ public class RotationActivity extends AppCompatActivity implements SensorEventLi
     private ImageView compass;
     private static final String TAG = "RotationAngle";
 
+    //Save the rotation data and orientation / offsets
     private float[] rotationMatrix = new float[9];
     private float[] orientationAngles = new float[3];
     private float[] calibrationOffsets = new float[3];
@@ -29,7 +31,6 @@ public class RotationActivity extends AppCompatActivity implements SensorEventLi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rotation);
-
         rotationNumbers = findViewById(R.id.rotation);
         compass = findViewById(R.id.compass);
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -52,12 +53,14 @@ public class RotationActivity extends AppCompatActivity implements SensorEventLi
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Not used in this example
+        // Not used
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+            //Note: Below is powered by chatGPT / Claude AI as this goes well beyond my own expertise
+
             // Get the rotation matrix from the rotation vector
             SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
 
@@ -75,7 +78,7 @@ public class RotationActivity extends AppCompatActivity implements SensorEventLi
             roll = (roll + 180) % 360 - 180;
 
             // Log the values
-            Log.d(TAG, String.format(Locale.getDefault(), "Z-Rotation: %.2f, Pitch: %.2f, Roll: %.2f", azimuth, pitch, roll));
+            //Log.d(TAG, String.format(Locale.getDefault(), "Z-Rotation: %.2f, Pitch: %.2f, Roll: %.2f", azimuth, pitch, roll));
 
             // Display the values in TextView
             if (rotationNumbers != null) {

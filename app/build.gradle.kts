@@ -43,4 +43,6 @@ dependencies {
     implementation("androidx.fragment:fragment:$fragmentVersion")
     // Kotlin
     implementation("androidx.fragment:fragment-ktx:$fragmentVersion")
+    //MUI
+    implementation(libs.material.v120)
 }

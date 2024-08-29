@@ -33,18 +33,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+        //EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        // Initialize views
+        accNumbers = findViewById(R.id.accnumbers);
+        levelText = findViewById(R.id.level);
+        experienceText = findViewById(R.id.exp);
+        progressText = findViewById(R.id.progress);
+        progressBar = findViewById(R.id.progressBar);
+
+        // Set up insets listener
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            accNumbers = findViewById(R.id.accnumbers);
-            levelText = findViewById(R.id.level);
-            experienceText = findViewById(R.id.exp);
-            progressText = findViewById(R.id.progress);
-            progressBar = findViewById(R.id.progressBar);
             return insets;
         });
+
+        // Initialize sensor manager
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
     }
 
@@ -73,6 +79,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Log.i("ACCFAIL", "There is no accelerometer");
         }
     }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (accelerometer != null) {
+            sensorManager.registerListener(this, accelerometer,
+                    SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
+        } else {
+            Log.i("ACCFAIL", "There is no accelerometer");
+        }
+    }
 
     @Override
     protected void onPause() {
@@ -81,43 +98,43 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Don't receive any more updates from either sensor.
         sensorManager.unregisterListener(this);
     }
+    @Override
+    protected void onStop() {
+        super.onStop();
 
-    // Get readings from accelerometer and magnetometer. To simplify calculations,
-    // consider storing these readings as unit vectors.
+        // Don't receive any more updates from either sensor.
+        sensorManager.unregisterListener(this);
+    }
+
+    // Get readings from accelerometer.
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            float diff = (Math.max(event.values[0], accelerometerReading[0]) - Math.min(event.values[0], accelerometerReading[0])) + (Math.max(event.values[1], accelerometerReading[1]) - Math.min(event.values[1], accelerometerReading[1])) + (Math.max(event.values[2], accelerometerReading[2]) - Math.min(event.values[2], accelerometerReading[2]));
+            float diff = (Math.max(event.values[0], accelerometerReading[0]) - Math.min(event.values[0], accelerometerReading[0])) +
+                    (Math.max(event.values[1], accelerometerReading[1]) - Math.min(event.values[1], accelerometerReading[1])) +
+                    (Math.max(event.values[2], accelerometerReading[2]) - Math.min(event.values[2], accelerometerReading[2]));
             exp += diff;
-            System.arraycopy(event.values, 0, accelerometerReading,
-                    0, accelerometerReading.length);
-            if (accNumbers != null) {
-                accNumbers.setText(String.format(Locale.getDefault(), "X: %.3f Y: %.3f Z: %.3f ", accelerometerReading[0], accelerometerReading[1], accelerometerReading[2]));
+            System.arraycopy(event.values, 0, accelerometerReading, 0, accelerometerReading.length);
 
-                //Calculate current level
-                //1 = 1 xp
-                //2 = 2xp
-                //3 = 4xp
-                //4 = 8xp
-                //5 = 16xp
-                //6 = 32xp
+            updateUI();
+        }
+    }
 
-                //y = exp, x = level
-                //y = 2^(x-1)
-                //x = log2(y) + 1
-                Log.i("EXP", "EXP" + String.valueOf(exp));
+    private void updateUI() {
+        if (accNumbers != null) {
+            accNumbers.setText(String.format(Locale.getDefault(), "X: %.3f Y: %.3f Z: %.3f ",
+                    accelerometerReading[0], accelerometerReading[1], accelerometerReading[2]));
 
-                level = (int)(Math.log(exp - 1) / Math.log(2)) + 1;
+            level = (int)(Math.log(exp - 1) / Math.log(2)) + 1;
 
-                levelText.setText(String.format(Locale.getDefault(),"Level: %d", level));
-                double currentProgressInNewLevel =  exp - Math.pow(2, level - 1);
-                double expToNextLevel = Math.pow(2, level) - Math.pow(2, level -1);
-                progressBar.setProgress((int) currentProgressInNewLevel);
-                progressBar.setMax((int) expToNextLevel);
-                progressText.setText(String.format(Locale.getDefault(), "Progress (%.0f/%.0f)", currentProgressInNewLevel, expToNextLevel));
-                Log.i("REQLEVEL", "Required for next level: " + String.valueOf(exp));
-                experienceText.setText(String.format(Locale.getDefault(),"Experience: %.0f", exp));
-            }
+            levelText.setText(String.format(Locale.getDefault(),"Level: %d", level));
+            double currentProgressInNewLevel = exp - Math.pow(2, level - 1);
+            double expToNextLevel = Math.pow(2, level) - Math.pow(2, level - 1);
+            progressBar.setProgress((int) currentProgressInNewLevel);
+            progressBar.setMax((int) expToNextLevel);
+            progressText.setText(String.format(Locale.getDefault(), "Progress (%.0f/%.0f)",
+                    currentProgressInNewLevel, expToNextLevel));
+            experienceText.setText(String.format(Locale.getDefault(),"Experience: %.0f", exp));
         }
     }
 
